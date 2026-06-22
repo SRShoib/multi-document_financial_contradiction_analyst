@@ -1,0 +1,30 @@
+{
+  "set_id": "set_b",
+  "gold_contradictions": [
+    {
+      "ctype": "numeric_mismatch",
+      "topic": "revenue",
+      "period": "Q2-FY2024",
+      "doc_ids": ["GLBX_10Q_Q2FY2024", "GLBX_PR_Q2FY2024"],
+      "note": "Q2 FY2024 revenue reported as $450.0M in the 10-Q vs $500M in the press release."
+    },
+    {
+      "ctype": "guidance_revision",
+      "topic": "guidance.revenue",
+      "period": "FY2024",
+      "doc_ids": ["GLBX_PR_Q2FY2024", "GLBX_CALL_Q2FY2024"],
+      "note": "FY2024 revenue guidance raised from ~$1,800M to $1,900-1,950M."
+    },
+    {
+      "ctype": "narrative_conflict",
+      "topic": "litigation",
+      "period": null,
+      "doc_ids": ["GLBX_10K_FY2023", "GLBX_CALL_Q2FY2024"],
+      "note": "10-K denies material litigation; earnings call discloses a material lawsuit."
+    }
+  ],
+  "numeric_checks": [
+    { "metric": "revenue", "period": "Q2-FY2024", "expected_mismatch": true },
+    { "metric": "net_income", "period": "Q2-FY2024", "expected_mismatch": false }
+  ]
+}

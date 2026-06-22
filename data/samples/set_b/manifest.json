@@ -1,0 +1,12 @@
+{
+  "set_id": "set_b",
+  "company": "Globex Corporation",
+  "ticker": "GLBX",
+  "description": "Q2 FY2024 set with injected contradictions: a Q2 revenue numeric mismatch (10-Q vs press release), a raised FY2024 revenue guidance (press release vs earnings call), and a litigation narrative conflict (10-K vs earnings call).",
+  "documents": [
+    { "doc_id": "GLBX_10K_FY2023", "path": "10k_fy2023.txt", "doc_type": "10-K", "period": "FY2023" },
+    { "doc_id": "GLBX_PR_Q2FY2024", "path": "press_release_q2_fy2024.txt", "doc_type": "press_release", "period": "Q2-FY2024" },
+    { "doc_id": "GLBX_10Q_Q2FY2024", "path": "10q_q2_fy2024.txt", "doc_type": "10-Q", "period": "Q2-FY2024" },
+    { "doc_id": "GLBX_CALL_Q2FY2024", "path": "earnings_call_q2_fy2024.txt", "doc_type": "earnings_call", "period": "Q2-FY2024" }
+  ]
+}

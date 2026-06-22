@@ -1,0 +1,10 @@
+{
+  "set_id": "set_c",
+  "company": "Initech Corporation",
+  "ticker": "INI",
+  "description": "Clean control set: consistent figures and consistent disclosures across documents. Ground truth contains NO contradictions — used to measure false positives (precision).",
+  "documents": [
+    { "doc_id": "INI_10K_FY2025", "path": "10k_fy2025.txt", "doc_type": "10-K", "period": "FY2025" },
+    { "doc_id": "INI_PR_FY2025", "path": "press_release_fy2025.txt", "doc_type": "press_release", "period": "FY2025" }
+  ]
+}

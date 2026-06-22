@@ -68,8 +68,15 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_eval(args: argparse.Namespace) -> int:
-    # Wired to the evaluation harness in step 7.
-    print("The evaluation harness is implemented in build step 7 (`make eval`).")
+    _configure_logging()
+    from .eval.runner import evaluate, format_report
+
+    report = evaluate()
+    print(format_report(report))
+    if args.langsmith:
+        from .eval.langsmith_eval import push_to_langsmith
+
+        push_to_langsmith()
     return 0
 
 
@@ -91,6 +98,11 @@ def main(argv: list[str] | None = None) -> int:
     run_p.set_defaults(func=_cmd_run)
 
     eval_p = sub.add_parser("eval", help="Run the offline evaluation harness")
+    eval_p.add_argument(
+        "--langsmith",
+        action="store_true",
+        help="Also upload the dataset + run evaluators to LangSmith (needs LANGSMITH_API_KEY).",
+    )
     eval_p.set_defaults(func=_cmd_eval)
 
     args = parser.parse_args(argv)
