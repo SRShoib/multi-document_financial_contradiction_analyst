@@ -36,8 +36,11 @@ from .models import (
     Memo,
     MemoContext,
     MemoSection,
+    Severity,
     SourceDoc,
 )
+from .tools.extraction import narrative_polarity, propose_candidates
+from .tools.numeric import compare
 
 T = TypeVar("T")
 
@@ -121,16 +124,56 @@ class StubLLM:
         cost = round(in_tok * _STUB_INPUT_PRICE + out_tok * _STUB_OUTPUT_PRICE, 6)
         return Usage(self._model, in_tok, out_tok, cost)
 
-    # --- extraction (deepened in step 4; numeric values come from tools) ----
+    # --- extraction: propose spans/topics (figures parsed later, not here) --
     def extract_claims(self, *, doc: SourceDoc, text: str) -> Generated[ClaimExtraction]:
-        result = ClaimExtraction(claims=[])
+        candidates = propose_candidates(text, doc.doc_type, doc.period)
+        result = ClaimExtraction(claims=candidates)
         return Generated(result, self._usage(prompt=text, output=result.model_dump_json()))
 
-    # --- narrative/guidance conflict (deepened in step 4) -------------------
+    # --- narrative/guidance conflict (the LLM-only reconciliation path) -----
     def judge_conflict(self, *, claim_a: Claim, claim_b: Claim) -> Generated[ConflictJudgment]:
-        result = ConflictJudgment(is_conflict=False, confidence=0.5)
+        result = self._judge_conflict(claim_a, claim_b)
         prompt = f"{claim_a.raw_text}\n{claim_b.raw_text}"
         return Generated(result, self._usage(prompt=prompt, output=result.model_dump_json()))
+
+    @staticmethod
+    def _judge_conflict(claim_a: Claim, claim_b: Claim) -> ConflictJudgment:
+        # Guidance revision: same forward metric/period, materially different figure.
+        if claim_a.kind == "guidance" and claim_b.kind == "guidance":
+            if claim_a.value is not None and claim_b.value is not None:
+                delta = compare(claim_a.value, claim_b.value, tolerance_pct=1.0)
+                if not delta.within_tolerance:
+                    severity: Severity = "high" if delta.pct_diff >= 15.0 else "medium"
+                    return ConflictJudgment(
+                        is_conflict=True,
+                        ctype="guidance_revision",
+                        severity=severity,
+                        confidence=0.8,
+                        rationale=(
+                            f"Revenue guidance revised by {delta.pct_diff:.1f}% "
+                            f"({claim_a.value:,.0f} vs {claim_b.value:,.0f})."
+                        ),
+                    )
+            return ConflictJudgment(is_conflict=False, confidence=0.6)
+
+        # Narrative conflict: opposing polarity on the same qualitative matter.
+        if claim_a.kind == "narrative" and claim_b.kind == "narrative":
+            pol_a = narrative_polarity(claim_a.raw_text)
+            pol_b = narrative_polarity(claim_b.raw_text)
+            if pol_a * pol_b < 0:
+                return ConflictJudgment(
+                    is_conflict=True,
+                    ctype="narrative_conflict",
+                    severity="high",
+                    confidence=0.7,
+                    rationale=(
+                        "One document denies the matter while another asserts it "
+                        f"(topic={claim_a.topic})."
+                    ),
+                )
+            return ConflictJudgment(is_conflict=False, confidence=0.6)
+
+        return ConflictJudgment(is_conflict=False, confidence=0.5)
 
     # --- memo drafting (real deterministic template) ------------------------
     def compose_memo(self, *, context: MemoContext) -> Generated[Memo]:

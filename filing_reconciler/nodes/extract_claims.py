@@ -2,9 +2,11 @@
 
 Each branch pulls structured claims (with char-span provenance) from a single
 document and returns them; the ``claims`` channel uses an ``operator.add`` reducer
-so the parallel branches concatenate. Numeric *values* are parsed deterministically
-in step 4 — this milestone emits a placeholder claim per document so the fan-out
-and the reducer are observable end-to-end.
+so the parallel branches concatenate.
+
+The LLM (here, the deterministic stub) proposes claim *spans/topics*; the numeric
+*value* of each claim is parsed deterministically from the cited span via
+``tools/numeric.py`` — never trusted from model output.
 """
 
 from typing import TypedDict
@@ -14,6 +16,8 @@ from langgraph.types import Send
 from ..deps import Deps
 from ..models import Citation, Claim, SourceDoc
 from ..state import GraphState
+from ..tools.numeric import first_number
+from ..tools.text import find_section
 from .common import Timer, metric, new_id
 
 
@@ -32,24 +36,31 @@ def extract_claims(task: ExtractTask, deps: Deps) -> GraphState:
         text = deps.store.get(doc.text_ref)
         generated = deps.llm.extract_claims(doc=doc, text=text)
 
-        # Step-3 placeholder so the reducer concatenation is observable; replaced by
-        # deterministic numeric + LLM-candidate extraction in step 4.
-        span_end = min(60, doc.char_len)
-        placeholder = Claim(
-            claim_id=new_id(doc.doc_id, "placeholder"),
-            doc_id=doc.doc_id,
-            doc_type=doc.doc_type,
-            period=doc.period,
-            topic="placeholder",
-            kind="narrative",
-            raw_text=text[:span_end],
-            citation=Citation(
-                doc_id=doc.doc_id, start=0, end=span_end, quote=text[:span_end], section="body"
-            ),
-        )
-        # In step 4, `generated.value.claims` (LLM candidates) + deterministic numeric
-        # parsing replace this placeholder.
-        claims = [placeholder]
+        claims: list[Claim] = []
+        for i, cand in enumerate(generated.value.claims):
+            quote = text[cand.char_start : cand.char_end]
+            number = first_number(cand.raw_text) if cand.kind in ("numeric", "guidance") else None
+            claims.append(
+                Claim(
+                    claim_id=new_id(doc.doc_id, cand.topic, i),
+                    doc_id=doc.doc_id,
+                    doc_type=doc.doc_type,
+                    period=cand.period or doc.period,
+                    topic=cand.topic,
+                    metric=cand.metric,
+                    kind=cand.kind,
+                    value=number.value if number else None,
+                    unit=number.unit if number else None,
+                    raw_text=cand.raw_text,
+                    citation=Citation(
+                        doc_id=doc.doc_id,
+                        start=cand.char_start,
+                        end=cand.char_end,
+                        quote=quote,
+                        section=find_section(doc.sections, cand.char_start),
+                    ),
+                )
+            )
 
     return {
         "claims": claims,
