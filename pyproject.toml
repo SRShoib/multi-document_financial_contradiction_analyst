@@ -79,10 +79,7 @@ no_implicit_optional = true
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
-
-[[tool.mypy.overrides]]
-module = ["tests.*"]
-disallow_untyped_defs = false
+# mypy targets source only (filing_reconciler, app); tests are checked by pytest.
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
