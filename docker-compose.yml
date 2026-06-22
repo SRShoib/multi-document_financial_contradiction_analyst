@@ -1,0 +1,23 @@
+# Local Postgres + pgvector for durable checkpoints and long-filing retrieval.
+# `make up` starts this; the app connects via DATABASE_URL.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: filing-reconciler-db
+    environment:
+      POSTGRES_USER: reconciler
+      POSTGRES_PASSWORD: reconciler
+      POSTGRES_DB: reconciler
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reconciler -d reconciler"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
