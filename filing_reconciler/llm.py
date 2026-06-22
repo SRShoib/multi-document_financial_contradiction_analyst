@@ -40,7 +40,7 @@ from .models import (
     SourceDoc,
 )
 from .tools.extraction import narrative_polarity, propose_candidates
-from .tools.numeric import compare
+from .tools.numeric import compare, extract_numbers
 
 T = TypeVar("T")
 
@@ -189,11 +189,15 @@ class StubLLM:
         claims: list[Claim],
         contradictions: list[Contradiction],
     ) -> Generated[CritiqueResult]:
+        # Monetary values the memo is allowed to assert: those backed by extracted
+        # claims, plus any figure present verbatim in a cited span.
+        backed: list[float] = [c.value for c in claims if c.value is not None and c.unit == "USD"]
+
         issues: list[CritiqueIssue] = []
         for section in memo.sections:
-            # Faithfulness heuristic: any section asserting a figure must cite it.
-            # Sections with no figures (e.g. "no contradictions detected") are exempt.
             asserts_figure = any(ch.isdigit() for ch in section.body)
+            # 1. Any section asserting a figure must carry a citation. Sections with no
+            #    figures (e.g. "no contradictions detected") are exempt.
             if asserts_figure and not section.citations:
                 issues.append(
                     CritiqueIssue(
@@ -203,6 +207,28 @@ class StubLLM:
                         section=section.heading,
                     )
                 )
+                continue
+            # 2. No invented monetary figures: every $-figure in the prose must match
+            #    (within tolerance) a claim value or a figure in the cited spans. Bare
+            #    numbers / percentages (computed deltas) are intentionally not checked.
+            cited_text = " ".join(c.quote for c in section.citations)
+            supported = backed + [
+                nm.value for nm in extract_numbers(cited_text) if nm.unit == "USD"
+            ]
+            for nm in extract_numbers(section.body):
+                if nm.unit != "USD":
+                    continue
+                tol = max(1.0, 0.005 * abs(nm.value))
+                if not any(abs(nm.value - v) <= tol for v in supported):
+                    issues.append(
+                        CritiqueIssue(
+                            assertion=section.heading,
+                            problem="invented_figure",
+                            detail=f"Figure {nm.raw} is not supported by any citation.",
+                            section=section.heading,
+                        )
+                    )
+
         result = CritiqueResult(faithful=not issues, issues=issues)
         return Generated(
             result,
