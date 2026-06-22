@@ -24,7 +24,7 @@ def _print_summary(thread_id: str, result: dict[str, Any]) -> None:
     claims = result.get("claims", [])
     contradictions = result.get("contradictions", [])
     memo = result.get("final_memo") or result.get("draft_memo")
-    interrupts = result.get("__interrupt__")
+    interrupts = GraphRuntime.interrupts_from_result(result)
 
     print(f"\nrun_id: {thread_id}")
     print(f"documents ingested : {len(sources)}")
@@ -33,8 +33,18 @@ def _print_summary(thread_id: str, result: dict[str, Any]) -> None:
     print(f"cost (usd)         : {result.get('cost_usd', 0.0):.6f}")
 
     if interrupts:
+        review = interrupts[0]
         print("\n** Paused for human review (HITL gate). **")
-        print("Use the FastAPI endpoints or the runtime to submit a decision and resume.")
+        print(f"gate: {review.get('kind')}")
+        for c in review.get("contradictions", []):
+            print(
+                f"  - [{c['ctype']}] {c['topic']} {c.get('period')} "
+                f"severity={c['severity']} confidence={c['confidence']}"
+            )
+        print(
+            "\nSubmit decisions via POST /runs/{run_id}/decision (see README), "
+            "or re-run with --auto-approve to drive through the gates."
+        )
         return
 
     if memo is not None:
@@ -49,7 +59,10 @@ def _cmd_run(args: argparse.Namespace) -> int:
     _configure_logging()
     company, inputs = load_sample(args.sample)
     with GraphRuntime() as rt:
-        thread_id, result = rt.start(inputs, company=company)
+        if args.auto_approve:
+            thread_id, result = rt.drive(inputs, company=company)
+        else:
+            thread_id, result = rt.start(inputs, company=company)
     _print_summary(thread_id, result)
     return 0
 
@@ -69,6 +82,11 @@ def main(argv: list[str] | None = None) -> int:
         "--sample",
         default="set_a",
         help=f"Sample set id. Available: {', '.join(list_sample_sets()) or '(none)'}",
+    )
+    run_p.add_argument(
+        "--auto-approve",
+        action="store_true",
+        help="Drive through HITL gates automatically (confirm all, approve memo).",
     )
     run_p.set_defaults(func=_cmd_run)
 
