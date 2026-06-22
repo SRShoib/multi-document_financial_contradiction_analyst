@@ -148,12 +148,15 @@ class StubLLM:
     ) -> Generated[CritiqueResult]:
         issues: list[CritiqueIssue] = []
         for section in memo.sections:
-            if not section.citations:
+            # Faithfulness heuristic: any section asserting a figure must cite it.
+            # Sections with no figures (e.g. "no contradictions detected") are exempt.
+            asserts_figure = any(ch.isdigit() for ch in section.body)
+            if asserts_figure and not section.citations:
                 issues.append(
                     CritiqueIssue(
                         assertion=section.heading,
                         problem="missing_citation",
-                        detail="Section has no supporting citation.",
+                        detail="Section asserts a figure without a supporting citation.",
                         section=section.heading,
                     )
                 )
