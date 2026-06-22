@@ -1,0 +1,31 @@
+{
+  "set_id": "set_a",
+  "gold_contradictions": [
+    {
+      "ctype": "numeric_mismatch",
+      "topic": "revenue",
+      "period": "FY2023",
+      "doc_ids": ["ACME_10K_FY2023", "ACME_PR_FY2023"],
+      "note": "FY2023 revenue reported as $1,000.0M in the 10-K vs $1,200M in the press release."
+    },
+    {
+      "ctype": "guidance_revision",
+      "topic": "guidance.revenue",
+      "period": "FY2024",
+      "doc_ids": ["ACME_PR_FY2023", "ACME_CALL_Q4FY2023"],
+      "note": "FY2024 revenue guidance lowered from ~$1,400M to $1,300-1,350M."
+    },
+    {
+      "ctype": "narrative_conflict",
+      "topic": "litigation",
+      "period": null,
+      "doc_ids": ["ACME_10K_FY2023", "ACME_CALL_Q4FY2023"],
+      "note": "10-K denies material litigation; earnings call discloses a material lawsuit."
+    }
+  ],
+  "numeric_checks": [
+    { "metric": "revenue", "period": "FY2023", "expected_mismatch": true },
+    { "metric": "net_income", "period": "FY2023", "expected_mismatch": false },
+    { "metric": "gross_margin", "period": "FY2023", "expected_mismatch": false }
+  ]
+}

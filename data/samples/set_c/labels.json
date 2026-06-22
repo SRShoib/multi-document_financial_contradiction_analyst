@@ -1,0 +1,9 @@
+{
+  "set_id": "set_c",
+  "gold_contradictions": [],
+  "numeric_checks": [
+    { "metric": "revenue", "period": "FY2025", "expected_mismatch": false },
+    { "metric": "net_income", "period": "FY2025", "expected_mismatch": false },
+    { "metric": "gross_margin", "period": "FY2025", "expected_mismatch": false }
+  ]
+}

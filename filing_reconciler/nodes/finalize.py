@@ -1,5 +1,6 @@
 """finalize — export the memo and log per-run cost and latency."""
 
+import json
 import logging
 from pathlib import Path
 
@@ -44,6 +45,25 @@ def finalize(state: GraphState, deps: Deps) -> GraphState:
             )
             (out_dir / f"{run_id}.md").write_text(render_markdown(memo), encoding="utf-8")
             update["final_memo"] = memo
+
+        # Run record: contradictions (with HITL status) + decisions + cost. This is the
+        # online→offline feedback hook — scripts/append_overrides.py replays confirmed
+        # contradictions back into the eval set's gold labels.
+        out_dir = Path(deps.settings.output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        run_record = {
+            "run_id": run_id,
+            "cost_usd": total_cost,
+            "contradictions": [
+                c.model_dump(mode="json") for c in state.get("contradictions", []) or []
+            ],
+            "human_decisions": [
+                d.model_dump(mode="json") for d in state.get("human_decisions", []) or []
+            ],
+        }
+        (out_dir / f"{run_id}.run.json").write_text(
+            json.dumps(run_record, indent=2), encoding="utf-8"
+        )
 
         logger.info(
             "run=%s cost_usd=%.6f latency_ms=%.1f contradictions=%d unresolved_issues=%d",
