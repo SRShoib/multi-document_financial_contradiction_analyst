@@ -216,6 +216,7 @@ class ClaimCandidate(_Base):
     topic: str
     kind: ClaimKind
     metric: str | None = None
+    period: str | None = None
     raw_text: str
     char_start: int = Field(ge=0)
     char_end: int = Field(ge=0)

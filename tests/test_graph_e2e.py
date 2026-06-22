@@ -30,13 +30,20 @@ def test_e2e_stub_run_produces_memo(tmp_path: Path) -> None:
         {"configurable": {"thread_id": tid}},
     )
 
-    # Skeleton runs to completion (HITL gates are pass-through until step 5).
+    # Runs to completion (HITL gates are pass-through until step 5).
     assert "__interrupt__" not in result
     assert len(result["sources"]) == 4
-    # operator.add reducer concatenated the parallel Send branches (one claim/doc).
-    assert len(result["claims"]) == 4
+    # operator.add reducer concatenated the parallel Send branches.
+    assert len(result["claims"]) > 4
     # cost_usd add-reducer accumulated synthetic stub cost across nodes.
     assert result["cost_usd"] > 0
+
+    # The three injected contradictions are detected, one of each type.
+    ctypes = {c.ctype for c in result["contradictions"]}
+    assert ctypes == {"numeric_mismatch", "guidance_revision", "narrative_conflict"}
+    # No false positives on the equal figures (net income, gross margin).
+    assert len(result["contradictions"]) == 3
+
     memo = result["final_memo"]
     assert memo is not None
     assert memo.title

@@ -31,9 +31,35 @@ def classify_doc_type(text: str, hint: str | None) -> str:
     return "unknown"
 
 
+def _is_header(line: str) -> bool:
+    """Heuristic header detector: ``ITEM N.`` lines or short ALL-CAPS headings."""
+    if not line:
+        return False
+    if line.upper().startswith("ITEM "):
+        return True
+    return any(ch.isalpha() for ch in line) and line == line.upper() and len(line) <= 80
+
+
 def _index_sections(text: str) -> list[SectionSpan]:
-    """Single whole-document section for now (real header indexing lands in step 4)."""
-    return [SectionSpan(name="body", start=0, end=len(text))]
+    """Build a section index from header lines; spans run header→next header."""
+    headers: list[tuple[str, int]] = []
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        if _is_header(stripped):
+            headers.append((stripped[:80], offset))
+        offset += len(line)
+
+    if not headers:
+        return [SectionSpan(name="body", start=0, end=len(text))]
+
+    spans: list[SectionSpan] = []
+    if headers[0][1] > 0:
+        spans.append(SectionSpan(name="preamble", start=0, end=headers[0][1]))
+    for i, (name, start) in enumerate(headers):
+        end = headers[i + 1][1] if i + 1 < len(headers) else len(text)
+        spans.append(SectionSpan(name=name, start=start, end=end))
+    return spans
 
 
 def ingest(state: GraphState, deps: Deps) -> GraphState:
