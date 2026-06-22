@@ -20,7 +20,7 @@ def _runtime_graph(tmp_path: Path):
     return build_graph(deps, checkpointer=InMemorySaver())
 
 
-def test_e2e_stub_run_produces_memo(tmp_path: Path) -> None:
+def test_e2e_detects_contradictions_then_pauses(tmp_path: Path) -> None:
     graph = _runtime_graph(tmp_path)
     company, inputs = load_sample("set_a")
     tid = uuid.uuid4().hex
@@ -30,21 +30,16 @@ def test_e2e_stub_run_produces_memo(tmp_path: Path) -> None:
         {"configurable": {"thread_id": tid}},
     )
 
-    # Runs to completion (HITL gates are pass-through until step 5).
-    assert "__interrupt__" not in result
+    # Detection (ingest → Send fan-out → reconcile → risk) runs, then the graph
+    # pauses at the HITL contradiction gate (resume/completion is covered in test_hitl).
+    assert "__interrupt__" in result
     assert len(result["sources"]) == 4
     # operator.add reducer concatenated the parallel Send branches.
     assert len(result["claims"]) > 4
     # cost_usd add-reducer accumulated synthetic stub cost across nodes.
     assert result["cost_usd"] > 0
 
-    # The three injected contradictions are detected, one of each type.
+    # The three injected contradictions are detected, one of each type, no false positives.
     ctypes = {c.ctype for c in result["contradictions"]}
     assert ctypes == {"numeric_mismatch", "guidance_revision", "narrative_conflict"}
-    # No false positives on the equal figures (net income, gross margin).
     assert len(result["contradictions"]) == 3
-
-    memo = result["final_memo"]
-    assert memo is not None
-    assert memo.title
-    assert (tmp_path / "out" / f"{tid}.md").exists()
