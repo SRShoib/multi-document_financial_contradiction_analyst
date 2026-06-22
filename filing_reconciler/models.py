@@ -69,6 +69,7 @@ class DocInput(_Base):
     """A document to ingest. Raw text stays out of state — only the path/ref."""
 
     path: str
+    doc_id: str | None = None
     doc_type: str | None = None
     period: str | None = None
     company: str | None = None

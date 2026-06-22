@@ -24,6 +24,7 @@ uv.lock.local
 !.env.example
 
 # Local artifacts
+/.artifacts/
 /artifacts/
 /output/
 *.log

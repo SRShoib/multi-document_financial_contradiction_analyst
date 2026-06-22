@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     checkpointer: Literal["memory", "postgres"] = "memory"
     database_url: str = "postgresql://reconciler:reconciler@localhost:5432/reconciler"
 
+    # --- Content store (raw text kept out of state) -------------------------
+    content_store_dir: str = "./.artifacts/content"
+
+    # --- Output / exports ---------------------------------------------------
+    output_dir: str = "./.artifacts/output"
+
     # --- Production guards --------------------------------------------------
     max_reflections: int = Field(default=2, ge=0)
     cost_cap_usd: float = Field(default=2.50, gt=0)
