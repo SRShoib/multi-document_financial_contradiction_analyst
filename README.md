@@ -174,7 +174,7 @@ Confidence calibration (ECE) : 0.177 over 6 preds
 
 > **Note on the LLM-judge metric.** With the offline stub, the judge is a crude token-overlap
 > heuristic, so its score is low and is **reported, not gated**. The reliable faithfulness
-> signal is the deterministic **exact-span match (1.000)**. Swap in `LLM_PROVIDER=anthropic`
+> signal is the deterministic **exact-span match (1.000)**. Set `LLM_PROVIDER=openai`
 > to get a real semantic judge.
 >
 > **ECE = 0.177** is a genuine calibration signal: the detector is *under-confident* on this
@@ -277,7 +277,7 @@ finalize with the issue logged) when it isn't.
 ### Other production guards
 
 - **Schema validation on every structured output** (`extra="forbid"` on LLM-output models) with
-  **retry-on-parse-failure** in the Anthropic provider (`tenacity`).
+  **retry-on-parse-failure** in the OpenAI provider (`tenacity`).
 - **Raw text kept out of state** — only `text_ref` pointers — so the checkpointer stays small
   and long filings don't bloat every snapshot.
 - **Citations stay verifiable across providers**: even the real LLM memo composer reuses the
@@ -294,13 +294,10 @@ Defaults are offline-safe.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `LLM_PROVIDER` | `stub` | `stub` (offline, deterministic), `anthropic` (Claude), or `openai` (GPT) |
-| `ANTHROPIC_API_KEY` | — | required when `LLM_PROVIDER=anthropic` |
-| `LLM_MODEL` | `claude-opus-4-8` | analysis model (anthropic provider) |
-| `LLM_JUDGE_MODEL` | `claude-haiku-4-5-20251001` | judge model (anthropic provider) |
+| `LLM_PROVIDER` | `stub` | `stub` (offline, deterministic) or `openai` (real GPT) |
 | `OPENAI_API_KEY` | — | required when `LLM_PROVIDER=openai` |
-| `OPENAI_MODEL` | `gpt-4.1` | analysis model (openai provider) |
-| `OPENAI_JUDGE_MODEL` | `gpt-4.1-mini` | judge model (openai provider) |
+| `OPENAI_MODEL` | `gpt-4.1` | analysis model |
+| `OPENAI_JUDGE_MODEL` | `gpt-4.1-mini` | eval/critique judge model |
 | `CHECKPOINTER` | `memory` | `memory` (in-process) or `postgres` (durable) |
 | `DATABASE_URL` | `postgresql://reconciler:reconciler@localhost:5432/reconciler` | used when `CHECKPOINTER=postgres` |
 | `MAX_REFLECTIONS` | `2` | reflection-loop circuit breaker |
@@ -337,17 +334,15 @@ the interface, never a concrete client.
 - **`StubLLM` (default)** — fully deterministic, no key. Numeric work is real (the tools);
   guidance/narrative judging, memo prose, and critique are deterministic heuristics. This is
   what the tests and eval exercise, so results are reproducible.
-- **`AnthropicLLM`** (`providers/anthropic_llm.py`, `--extra anthropic`) — official `anthropic`
-  SDK with structured outputs (`messages.parse`), `claude-opus-4-8` for analysis and
-  `claude-haiku-4-5` for the judge.
-- **`OpenAILLM`** (`providers/openai_llm.py`, `--extra openai`) — official `openai` SDK with
-  structured outputs (`chat.completions.parse`), `gpt-4.1` for analysis and `gpt-4.1-mini`
-  for the judge.
+- **`OpenAILLM`** (`providers/openai_llm.py`, `--extra openai`) — the real provider: official
+  `openai` SDK with structured outputs (`chat.completions.parse`), `gpt-4.1` for analysis and
+  `gpt-4.1-mini` for the judge, per-call cost from token usage, and retry on schema-validation
+  failure. It preserves the same guarantees as the stub: figures are parsed deterministically
+  (never emitted by the model) and memo citations reuse the deterministic template.
 
-Both real providers preserve the same guarantees (figures parsed deterministically — never
-emitted by the model; memo citations reuse the deterministic template), track per-call cost
-from token usage, and retry on schema-validation failure. **Switching providers is a config
-change (`LLM_PROVIDER`), nothing else** — that's the point of the `LLM` interface.
+Switching between `stub` and `openai` is a one-line config change (`LLM_PROVIDER`) — that's
+the point of the `LLM` interface. (Adding another vendor is just another class behind the
+same Protocol.)
 
 ---
 
@@ -366,7 +361,7 @@ filing_reconciler/
   nodes/            ingest, extract_claims, reconcile, risk_scoring, hitl, draft_memo,
                     critique, finalize, common (gating + reflection predicates)
   tools/            numeric (parse/compare), text (sentences/periods), extraction (candidates)
-  providers/        anthropic_llm (official SDK, structured outputs)
+  providers/        openai_llm (official OpenAI SDK, structured outputs)
   eval/             dataset, metrics, runner, langsmith_eval
 app/main.py         FastAPI: start / pending / decision
 data/samples/       set_a, set_b, set_c + labels.json
@@ -399,7 +394,7 @@ interrupt/resume cycle, and the full API flow. `ruff` + `mypy` (pydantic plugin)
 - **pgvector retrieval is scaffolded, not yet wired into extraction.** The schema/extension are
   provisioned; semantic retrieval over very long filings is the natural next step (chunk →
   embed → retrieve relevant spans before extraction).
-- **The stub LLM-judge is a placeholder** — use the Anthropic provider for a meaningful
+- **The stub LLM-judge is a placeholder** — use the OpenAI provider for a meaningful
   semantic faithfulness judge (the exact-span metric is the reliable offline signal).
 - **API concurrency**: the in-memory checkpointer + single runtime is fine for a demo;
   multi-tenant production should use the Postgres checkpointer and a connection pool.
