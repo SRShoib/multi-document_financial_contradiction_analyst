@@ -327,9 +327,8 @@ def get_llm(settings: Settings) -> LLM:
     if settings.llm_provider == "stub":
         return StubLLM()
     if settings.llm_provider == "anthropic":
-        # Real provider is wired in step 6 (behind the optional `anthropic` extra).
-        raise NotImplementedError(
-            "Anthropic provider is implemented in build step 6. "
-            "Set LLM_PROVIDER=stub to run offline."
-        )
+        # Real provider behind the same interface (needs the `anthropic` extra + key).
+        from .providers.anthropic_llm import AnthropicLLM
+
+        return AnthropicLLM(settings)
     raise ValueError(f"Unknown LLM_PROVIDER: {settings.llm_provider!r}")
