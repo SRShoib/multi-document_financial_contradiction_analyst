@@ -22,10 +22,18 @@ class Settings(BaseSettings):
     )
 
     # --- LLM provider -------------------------------------------------------
-    llm_provider: Literal["stub", "anthropic"] = "stub"
+    # stub      = deterministic, offline, no key (default)
+    # anthropic = Claude via the official anthropic SDK (ANTHROPIC_API_KEY)
+    # openai    = GPT via the official openai SDK (OPENAI_API_KEY)
+    llm_provider: Literal["stub", "anthropic", "openai"] = "stub"
+
     anthropic_api_key: str | None = None
     llm_model: str = "claude-opus-4-8"
     llm_judge_model: str = "claude-haiku-4-5-20251001"
+
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4.1"
+    openai_judge_model: str = "gpt-4.1-mini"
 
     # --- Checkpointer -------------------------------------------------------
     checkpointer: Literal["memory", "postgres"] = "memory"
