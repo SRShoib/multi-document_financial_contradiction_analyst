@@ -73,6 +73,11 @@ def finalize(state: GraphState, deps: Deps) -> GraphState:
             len(state.get("contradictions", []) or []),
             len(unresolved),
         )
+        # Per-node cost/latency breakdown (the node_metrics add-reducer accumulated these).
+        for m in state.get("node_metrics", []):
+            logger.debug(
+                "  node=%-20s cost_usd=%.6f latency_ms=%.1f", m.node, m.cost_usd, m.latency_ms
+            )
         if unresolved:
             update["errors"] = [
                 f"finalize: {len(unresolved)} unresolved faithfulness issue(s) after reflection cap"
