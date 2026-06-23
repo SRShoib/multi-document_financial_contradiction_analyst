@@ -21,8 +21,3 @@ def test_openai_provider_selected() -> None:
 def test_openai_requires_key() -> None:
     with pytest.raises(RuntimeError):
         get_llm(Settings(_env_file=None, llm_provider="openai", openai_api_key=None))
-
-
-def test_anthropic_requires_key() -> None:
-    with pytest.raises(RuntimeError):
-        get_llm(Settings(_env_file=None, llm_provider="anthropic", anthropic_api_key=None))

@@ -1,12 +1,12 @@
 """OpenAI (GPT) implementation of the ``LLM`` interface.
 
 Selected with ``LLM_PROVIDER=openai`` (needs the ``openai`` extra + ``OPENAI_API_KEY``).
-It mirrors ``AnthropicLLM`` exactly — same Protocol, same prompts, same guarantees —
-so the provider is a config swap. Uses the official ``openai`` SDK structured outputs
-(``chat.completions.parse`` with a Pydantic ``response_format``), defaulting to
+This is the project's real LLM provider; the deterministic ``StubLLM`` remains the
+offline default that tests/eval/CI exercise. Uses the official ``openai`` SDK structured
+outputs (``chat.completions.parse`` with a Pydantic ``response_format``), defaulting to
 ``gpt-4.1`` for analysis and ``gpt-4.1-mini`` for the eval judge.
 
-Preserved guarantees (identical to the Anthropic provider):
+Preserved guarantees:
 * The LLM never emits figures — extraction returns verbatim quotes; the numeric value
   is parsed deterministically from the cited span, and offsets are located by string
   search (``tools/numeric.py``).

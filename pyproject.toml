@@ -24,10 +24,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Real LLM providers (official SDKs). The default runtime uses a deterministic
-# stub so the repo runs end-to-end with no API keys. Pick one, behind the same
-# LLM interface, via LLM_PROVIDER.
-anthropic = ["anthropic>=0.49"]
+# Real LLM provider (official OpenAI SDK). The default runtime uses a deterministic
+# stub so the repo runs end-to-end with no API keys; set LLM_PROVIDER=openai to use GPT.
 openai = ["openai>=1.50"]
 dev = [
     "pytest>=8.0",

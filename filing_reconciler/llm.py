@@ -5,7 +5,7 @@ Why an interface
 Nodes depend on the ``LLM`` Protocol, never on a concrete provider. The default
 implementation (``StubLLM``) is fully deterministic and needs no API key, so the
 whole graph — and the eval harness — runs offline and reproducibly. A real
-provider (``anthropic``) is wired behind the same Protocol in a later step.
+provider (``openai``) is wired behind the same Protocol (``providers/openai_llm.py``).
 
 Cost accounting
 ---------------
@@ -44,7 +44,7 @@ from .tools.numeric import compare, extract_numbers
 
 T = TypeVar("T")
 
-# Synthetic stub pricing (USD/token). Not Anthropic's real prices — just enough
+# Synthetic stub pricing (USD/token). Not a real provider's prices — just enough
 # that cost_usd is nonzero so the cost cap and per-run cost logging are testable.
 _STUB_INPUT_PRICE = 1e-6
 _STUB_OUTPUT_PRICE = 3e-6
@@ -326,12 +326,8 @@ def get_llm(settings: Settings) -> LLM:
     """Return the configured LLM provider (defaults to the deterministic stub)."""
     if settings.llm_provider == "stub":
         return StubLLM()
-    if settings.llm_provider == "anthropic":
-        # Real provider behind the same interface (needs the `anthropic` extra + key).
-        from .providers.anthropic_llm import AnthropicLLM
-
-        return AnthropicLLM(settings)
     if settings.llm_provider == "openai":
+        # Real provider behind the same interface (needs the `openai` extra + key).
         from .providers.openai_llm import OpenAILLM
 
         return OpenAILLM(settings)

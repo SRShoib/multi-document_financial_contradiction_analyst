@@ -22,14 +22,9 @@ class Settings(BaseSettings):
     )
 
     # --- LLM provider -------------------------------------------------------
-    # stub      = deterministic, offline, no key (default)
-    # anthropic = Claude via the official anthropic SDK (ANTHROPIC_API_KEY)
-    # openai    = GPT via the official openai SDK (OPENAI_API_KEY)
-    llm_provider: Literal["stub", "anthropic", "openai"] = "stub"
-
-    anthropic_api_key: str | None = None
-    llm_model: str = "claude-opus-4-8"
-    llm_judge_model: str = "claude-haiku-4-5-20251001"
+    # stub   = deterministic, offline, no key (default; used by tests/eval/CI)
+    # openai = real GPT via the official openai SDK (OPENAI_API_KEY)
+    llm_provider: Literal["stub", "openai"] = "stub"
 
     openai_api_key: str | None = None
     openai_model: str = "gpt-4.1"
