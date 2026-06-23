@@ -9,8 +9,8 @@ UV ?= uv
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-install: ## Create venv and install (dev + anthropic extras)
-	$(UV) sync --extra dev --extra anthropic
+install: ## Create venv and install (dev + provider extras)
+	$(UV) sync --extra dev --extra anthropic --extra openai
 
 up: ## Start Postgres + pgvector
 	docker compose up -d

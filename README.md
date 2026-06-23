@@ -294,10 +294,13 @@ Defaults are offline-safe.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `LLM_PROVIDER` | `stub` | `stub` (offline, deterministic) or `anthropic` (real Claude) |
+| `LLM_PROVIDER` | `stub` | `stub` (offline, deterministic), `anthropic` (Claude), or `openai` (GPT) |
 | `ANTHROPIC_API_KEY` | — | required when `LLM_PROVIDER=anthropic` |
 | `LLM_MODEL` | `claude-opus-4-8` | analysis model (anthropic provider) |
-| `LLM_JUDGE_MODEL` | `claude-haiku-4-5-20251001` | eval judge model |
+| `LLM_JUDGE_MODEL` | `claude-haiku-4-5-20251001` | judge model (anthropic provider) |
+| `OPENAI_API_KEY` | — | required when `LLM_PROVIDER=openai` |
+| `OPENAI_MODEL` | `gpt-4.1` | analysis model (openai provider) |
+| `OPENAI_JUDGE_MODEL` | `gpt-4.1-mini` | judge model (openai provider) |
 | `CHECKPOINTER` | `memory` | `memory` (in-process) or `postgres` (durable) |
 | `DATABASE_URL` | `postgresql://reconciler:reconciler@localhost:5432/reconciler` | used when `CHECKPOINTER=postgres` |
 | `MAX_REFLECTIONS` | `2` | reflection-loop circuit breaker |
@@ -336,10 +339,15 @@ the interface, never a concrete client.
   what the tests and eval exercise, so results are reproducible.
 - **`AnthropicLLM`** (`providers/anthropic_llm.py`, `--extra anthropic`) — official `anthropic`
   SDK with structured outputs (`messages.parse`), `claude-opus-4-8` for analysis and
-  `claude-haiku-4-5` for the judge, per-call cost from token usage, and retry-on-validation.
-  It preserves the no-invented-figures and verifiable-citations guarantees.
+  `claude-haiku-4-5` for the judge.
+- **`OpenAILLM`** (`providers/openai_llm.py`, `--extra openai`) — official `openai` SDK with
+  structured outputs (`chat.completions.parse`), `gpt-4.1` for analysis and `gpt-4.1-mini`
+  for the judge.
 
-Switching providers is a config change (`LLM_PROVIDER`), nothing else.
+Both real providers preserve the same guarantees (figures parsed deterministically — never
+emitted by the model; memo citations reuse the deterministic template), track per-call cost
+from token usage, and retry on schema-validation failure. **Switching providers is a config
+change (`LLM_PROVIDER`), nothing else** — that's the point of the `LLM` interface.
 
 ---
 

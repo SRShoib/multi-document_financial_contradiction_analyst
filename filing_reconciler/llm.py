@@ -331,4 +331,8 @@ def get_llm(settings: Settings) -> LLM:
         from .providers.anthropic_llm import AnthropicLLM
 
         return AnthropicLLM(settings)
+    if settings.llm_provider == "openai":
+        from .providers.openai_llm import OpenAILLM
+
+        return OpenAILLM(settings)
     raise ValueError(f"Unknown LLM_PROVIDER: {settings.llm_provider!r}")
