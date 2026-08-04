@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version.local
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.uv/
+uv.lock.local
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local artifacts
+/.artifacts/
+/artifacts/
+/output/
+
+# User-uploaded documents (POST /documents) — real filings must never be committed
+/data/uploads/
