@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05060a;
+  --foreground: #e7e9f3;
+
+  --surface: #0b0d14;
+  --surface-raised: #10131c;
+  --border-subtle: rgba(231, 233, 243, 0.08);
+  --border-strong: rgba(231, 233, 243, 0.16);
+
+  --iris-1: #6366f1;
+  --iris-2: #a855f7;
+  --iris-3: #22d3ee;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-iris-1: var(--iris-1);
+  --color-iris-2: var(--iris-2);
+  --color-iris-3: var(--iris-3);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
+  --font-serif: var(--font-fraunces);
+
+  --animate-drift-a: drift-a 26s ease-in-out infinite;
+  --animate-drift-b: drift-b 32s ease-in-out infinite;
+  --animate-drift-c: drift-c 22s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.2s linear infinite;
+  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+* {
+  border-color: var(--border-subtle);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--iris-2) 55%, transparent);
+  color: white;
+}
+
+/* Slim, unobtrusive scrollbars that fit the dark chrome */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(231, 233, 243, 0.18) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(231, 233, 243, 0.14);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(231, 233, 243, 0.24);
+  background-clip: content-box;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Glass surfaces & premium chrome                                        */
+/* ---------------------------------------------------------------------- */
+
+.glass-panel {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--surface-raised) 92%, white 2%) 0%,
+    var(--surface) 100%
+  );
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 60px -30px rgba(0, 0, 0, 0.8);
+}
+
+.glass-panel-hover {
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+.glass-panel-hover:hover {
+  border-color: var(--border-strong);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 24px 70px -28px rgba(99, 102, 241, 0.25);
+}
+
+.iris-gradient-text {
+  background: linear-gradient(100deg, var(--iris-1), var(--iris-2) 55%, var(--iris-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.iris-border {
+  position: relative;
+}
+.iris-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, var(--iris-1), var(--iris-2), var(--iris-3));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
+}
+
+.grid-fade {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(231, 233, 243, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(231, 233, 243, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 70%);
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(6%, 8%) scale(1.08); }
+  66% { transform: translate(-4%, 4%) scale(0.96); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(-8%, -6%) scale(1.05); }
+  70% { transform: translate(5%, -3%) scale(0.98); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  50% { transform: translate(-50%, 6%) scale(1.12); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(231, 233, 243, 0.06) 25%,
+    rgba(231, 233, 243, 0.14) 37%,
+    rgba(231, 233, 243, 0.06) 63%
+  );
+  background-size: 400px 100%;
+  animation: var(--animate-shimmer);
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 45%, transparent); }
+  100% { box-shadow: 0 0 0 10px color-mix(in oklab, currentColor 0%, transparent); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Monospace numerals for tabular financial figures */
+.tabular-figures {
+  font-variant-numeric: tabular-nums;
+}
