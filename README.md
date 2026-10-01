@@ -15,7 +15,7 @@ This is a two-part repo:
 ## Quickstart
 
 ```bash
-# Terminal 1 — backend (see backend/README.md for the non-make Windows path)
+# Terminal 1 — backend (see backend/README.md for the non-make Windows path).
 cd backend
 make install
 make serve            # http://localhost:8000
