@@ -118,6 +118,10 @@ export function ServerWakeBanner({
               <span className="flex-1">Server is waking up, please wait</span>
               <span className="tabular-figures text-xs text-foreground/60">{elapsed}s</span>
             </div>
+            <p className="mt-1 pl-7 text-xs text-foreground/50">
+              The backend runs on Render&apos;s free tier and sleeps when idle. The first
+              request can take up to a minute.
+            </p>
             <div
               role="progressbar"
               aria-label="Server wake-up progress"
