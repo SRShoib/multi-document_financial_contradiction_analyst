@@ -3,6 +3,7 @@ import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { BackgroundFx } from "@/components/chrome/background-fx";
+import { ServerWakeBanner } from "@/components/chrome/server-wake-banner";
 import { SiteHeader } from "@/components/chrome/site-header";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
       <body className="relative min-h-full flex flex-col">
         <BackgroundFx />
         <SiteHeader />
+        <ServerWakeBanner />
         <main className="flex-1">{children}</main>
         <Toaster
           theme="dark"
